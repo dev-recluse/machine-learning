@@ -1,0 +1,1 @@
+The objective of this project is to apply k-Nearest Neighbors (k-NN) and Logistic Regression on the Breast Cancer dataset, then train and evaluate both models using cross-validation, and compare performance in terms of expected accuracy, observed accuracy, precision, and recall.  There's an 80/20 Train/Test data split for testing the data.
