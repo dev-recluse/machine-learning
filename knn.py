@@ -201,7 +201,6 @@ comparison = pd.DataFrame({
 
 print(comparison)
 
-
 ##ROC Curve and AUC
 #To fit logistic regression model
 logistic_pipe.fit(X_train, y_train)
@@ -217,4 +216,16 @@ knn_fpr, knn_tpr, _ = roc_curve(y_test, knn_probabilities)
 #Calculate AUC
 logistic_auc = roc_auc_score(y_test, logistic_probabilities)
 knn_auc = roc_auc_score(y_test, knn_probabilities)
+
+#Plot ROC curves.
+plt.figure()
+plt.plot(logistic_fpr, logistic_tpr, label="Logistic Regression (AUC)")
+plt.plot(knn_fpr, knn_tpr, label="k-NN (AUC)")
+plt.plot([0,1], [0,1], linestyle="--", label="Random Classifier")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.grid(True)
+plt.show()
                   
