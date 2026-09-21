@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report, roc_curve, roc_auc_score
 from sklearn.linear_model import LogisticRegression
 
 ###Step 1: Getting to know the data.
@@ -115,3 +115,106 @@ results_df = pd.DataFrame(results)
 print(results_df)
 
 ###Step 4: Cross-Validation
+#For cross-validation.
+cv_results = [] 
+
+for name, model in models.items():
+    accuracy_scores = cross_val_score(model, X, y, cv=5, scoring="accuracy")
+    precision_scores = cross_val_score(model, X, y, cv=5, scoring="precision")
+    recall_scores = cross_val_score(model, X, y, cv=5, scoring="recall")
+
+    #Store the results for each fold.
+    for fold in range(5):
+        cv_results.append({
+            "Model": name,
+            "Fold": fold+1,
+            "Accuracy": accuracy_scores[fold],
+            "Precision": precision_scores[fold],
+            "Recall": recall_scores[fold]
+        })
+
+#Convert results to data frame.
+cv_results = pd.DataFrame(cv_results)
+print(cv_results)
+
+#To calculate the average standard deviation across the 5 folds.
+cv_std = cv_results.groupby("Model")[["Accuracy", "Precision", "Recall"]].agg(["mean", "std"])
+print(cv_std)
+
+#Cross validation for k only.
+k_values = list(range(1, 31))
+cv_scores = []
+
+for k in k_values:
+    pipe_k = Pipeline([
+        ("scaler", StandardScaler()),
+        ("knn", KNeighborsClassifier(n_neighbors=k))
+    ])
+
+    #Cross validating training data.
+    scores = cross_val_score(pipe_k, X_train, y_train, cv=5, scoring="accuracy")
+    cv_scores.append(scores.mean())
+
+best_k = k_values[int(np.argmax(cv_scores))]
+
+print("\nBest k by CV on training set: ", best_k)
+print("\nBest mean CV accuracy: ", max(cv_scores))
+
+#Make the plots for training k CV.
+plt.figure()
+plt.plot(k_values, cv_scores, marker="o")
+plt.xlabel("k (neighbors)")
+plt.ylabel("Mean CV Accuracy (5-fold)")
+plt.title("Choosing k via Cross-Validation")
+plt.grid(True)
+plt.show()
+
+#Fit with best k and evaluate on test data.
+best_knn = Pipeline([
+    ("scaler", StandardScaler()),
+    ("knn", KNeighborsClassifier(n_neighbors=k))
+])
+
+best_knn.fit(X_train, y_train)
+test_predictions = best_knn.predict(X_test)
+
+print("Test-set classification report:")
+print(classification_report(y_test, test_predictions, target_names=cancer.target_names))
+
+#To cross validate Logistic Regression.
+logistic_pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("logistic", LogisticRegression(max_iter=1000))
+])
+
+logistic_scores = cross_val_score(logistic_pipe, X_train, y_train, cv=5, scoring="accuracy")
+
+print("Logistic Regression CV scores: ", logistic_scores)
+print("Logistic Regression mean CV accuracy: ", logistic_scores.mean())
+
+#To compare Logistic Regression and k-NN in data frame.
+comparison = pd.DataFrame({
+    "Model": ["Logistic Regression", f"k-NN ({best_k})"],
+    "Mean CV Accuracy": [logistic_scores.mean(), max(cv_scores).std()],
+    "CV Accuracy Std": [logistic_scores.std(), np.array(cv_scores).std()]
+})
+
+print(comparison)
+
+
+##ROC Curve and AUC
+#To fit logistic regression model
+logistic_pipe.fit(X_train, y_train)
+
+#To get probablities
+logistic_probabilities = logistic_pipe.predict_proba(X_test)[:,1]
+knn_probabilities = best_knn.predict_proba(X_test)[:,1]
+
+#Calculate ROC curves
+logistic_fpr, logistic_tpr, _ = roc_curve(y_test, logistic_probabilities)
+knn_fpr, knn_tpr, _ = roc_curve(y_test, knn_probabilities)
+
+#Calculate AUC
+logistic_auc = roc_auc_score(y_test, logistic_probabilities)
+knn_auc = roc_auc_score(y_test, knn_probabilities)
+                  
