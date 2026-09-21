@@ -278,3 +278,44 @@ for name, model in {"Logistic Regression": logistic_pipe, f"k-NN (k={best_k})": 
     display.plot()
     plt.title(f"Confusion Matrix: {name}")
     plt.show()
+
+###To tune hyperparameters further for Logistic Regression.
+C_values = [0.001, 0.01, 0.1, 1, 10, 100]
+logistic_tuning_results = []
+
+for C in C_values:
+    logistic_model = Pipeline([("scaler", StandardScaler()), ("logistic", LogisticRegression(C=C, max_iter=1000))])
+    accuracy_scores = cross_val_score(logistic_model, X_train, y_train, cv=5, scoring="accuracy")
+    logistic_tuning_results.append({
+        "C": C,
+        "Mean Accuracy": accuracy_scores.mean(),
+        "Std Accuracy": accuracy_scores.std()
+    })
+
+logistic_tuning_df = pd.DataFrame(logistic_tuning_results)
+print(logistic_tuning_df)
+
+#To print the best regularization value.
+best_C = logistic_tuning_df.loc[logistic_tuning_df["Mean Accuracy"].idxmax(), "C"]
+print("\nBest regularization value: ", best_C)
+
+###To tune hyperparameters further for k-NN.
+distance_metrics = ["euclidean", "manhattan", "minkowski"]
+knn_tuning_results = []
+
+for metric in distance_metrics:
+    knn_model = Pipeline([("scaler", StandardScaler()), ("knn", KNeighborsClassifier(n_neighbors=best_k, metric=metric))])
+    accuracy_scores = cross_val_score(knn_model, X_train, y_train, cv=5, scoring="accuracy")
+    knn_tuning_results.append({
+        "Distance Metric": metric,
+        "Mean Accuracy": accuracy_scores.mean(),
+        "Std Accuracy": accuracy_scores.std()
+    })
+
+knn_tuning_df = pd.DataFrame(knn_tuning_results)
+print(knn_tuning_df)
+
+#To print the best metric.
+best_metric = knn_tuning_df.loc[knn_tuning_df["Mean Accuracy"].idxmax(), "Distance Metric"]
+print("\nBest metric value: ", best_metric)
+        
