@@ -228,4 +228,53 @@ plt.title("ROC Curve")
 plt.legend()
 plt.grid(True)
 plt.show()
-                  
+
+###To stimulate imbalanced data by downsampling one class.
+#Combine features and target into one data frame.
+imbalanced_df = pd.DataFrame(X, columns=cancer.feature_names)
+imbalanced_df["target"] = y
+
+#To separate the two classes.
+class0 = imbalanced_df[imbalanced_df["target"]==0]
+class1 = imbalanced_df[imbalanced_df["target"]==1]
+
+#To downsample class 1.
+class1_downsample = class1.sample(n=len(class1) // 2, random_state=42)
+
+#To recombine the classes.
+imbalanced_df = pd.concat([class0, class1_downsample], axis=0).sample(frac=1, random_state=42).reset_index(drop=True)
+
+#Seperate features and target again.
+X_imbalanced = imbalanced_df.drop(columns="target").values
+y_imbalanced = imbalanced_df['target'].values
+
+#To inspect the new class distribution.
+print(pd.Series(y_imbalanced).value_counts())
+print(pd.Series(y_imbalanced).value_counts(normalize=True))
+
+#Split and evaluate the models on the imbalanced data.
+X_train_imb, X_test_imb, y_train_imb, y_test_imb = train_test_split(X_imbalanced, y_imbalanced, test_size=0.20, random_state=42, stratify=y_imbalanced)
+imbalanced_results = []
+
+for name, model in {"Logistic Regression": logistic_pipe, f"k-NN (k={best_k})": best_knn}.items():
+    model.fit(X_train_imb, y_train_imb)
+    predictions = model.predict(X_test_imb)
+    report = classification_report(y_test_imb, predictions, output_dict=True)
+    imbalanced_results.append({
+        "Model": name,
+        "Accuracy": report["accuracy"],
+        "Precision": report["weighted avg"]["precision"],
+        "Recall": report["weighted avg"]["recall"]
+    })
+
+imbalanced_results_df = pd.DataFrame(imbalanced_results)
+print(imbalanced_results_df)
+
+#To inspect the confusion matrixes.
+for name, model in {"Logistic Regression": logistic_pipe, f"k-NN (k={best_k})": best_knn}.items():
+    predictions = model.predict(X_test_imb)
+    confMatrix = confusion_matrix(y_test_imb, predictions)
+    display = ConfusionMatrixDisplay(confusion_matrix=confMatrix, display_labels=cancer.target_names)
+    display.plot()
+    plt.title(f"Confusion Matrix: {name}")
+    plt.show()
