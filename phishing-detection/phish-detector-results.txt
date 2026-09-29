@@ -1,0 +1,100 @@
+Part 1: Exploring the data.
+
+['email_phishing_data.csv']
+
+Header: 
+    num_words  num_unique_words  ...  num_urgent_keywords  label
+0        140                94  ...                    0      0
+1          5                 5  ...                    0      0
+2         34                32  ...                    0      0
+3          6                 6  ...                    0      0
+4          9                 9  ...                    0      0
+
+[5 rows x 9 columns]
+
+Shape: 
+ (524846, 9)
+<class 'pandas.DataFrame'>
+RangeIndex: 524846 entries, 0 to 524845
+Data columns (total 9 columns):
+ #   Column               Non-Null Count   Dtype
+---  ------               --------------   -----
+ 0   num_words            524846 non-null  int64
+ 1   num_unique_words     524846 non-null  int64
+ 2   num_stopwords        524846 non-null  int64
+ 3   num_links            524846 non-null  int64
+ 4   num_unique_domains   524846 non-null  int64
+ 5   num_email_addresses  524846 non-null  int64
+ 6   num_spelling_errors  524846 non-null  int64
+ 7   num_urgent_keywords  524846 non-null  int64
+ 8   label                524846 non-null  int64
+dtypes: int64(9)
+memory usage: 36.0 MB
+
+Info: 
+ None
+label
+0    517897
+1      6949
+Name: count, dtype: int64
+       num_words  num_unique_words  ...  num_spelling_errors  num_urgent_keywords
+label                               ...                                          
+0            140                94  ...                    0                    0
+1            102                75  ...                    4                    0
+
+[2 rows x 8 columns]
+label
+0    98.675993
+1     1.324007
+Name: proportion, dtype: float64
+
+Part 2: Preparing the data.
+
+
+Part 3: Training a Linear SVM.
+
+
+Accuracy:  0.5365151948175669
+
+Classification Report: 
+               precision    recall  f1-score   support
+
+           0       0.99      0.53      0.69    103580
+           1       0.02      0.74      0.04      1390
+
+    accuracy                           0.54    104970
+   macro avg       0.51      0.64      0.37    104970
+weighted avg       0.98      0.54      0.69    104970
+
+
+Confusion Matrix: 
+ [[55284 48296]
+ [  356  1034]]
+
+Part 4: Train SVM using RBF Kernel.
+
+
+Accuracy:  0.6371820520148614
+
+Classification Report: 
+               precision    recall  f1-score   support
+
+           0       0.99      0.64      0.78    103580
+           1       0.03      0.72      0.05      1390
+
+    accuracy                           0.64    104970
+   macro avg       0.51      0.68      0.41    104970
+weighted avg       0.98      0.64      0.77    104970
+
+
+Confusion Matrix: 
+ [[65888 37692]
+ [  393   997]]
+
+Part 5: Testing the values using the RBF kernel.
+
+C =  0.01 , Test Accuracy =  0.7592931313708678
+C =  0.1 , Test Accuracy =  0.6252643612460703
+C =  1 , Test Accuracy =  0.6371820520148614
+C =  10 , Test Accuracy =  0.7111936743831571
+C =  100 , Test Accuracy =  0.7553205677812709
